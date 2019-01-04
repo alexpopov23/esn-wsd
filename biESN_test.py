@@ -1,5 +1,7 @@
+import pickle
 import cPickle
 import argparse
+import os
 
 from numpy import flip, zeros, tanh, dot, vstack, asarray, reshape, square, sqrt
 from preprocess_data import load_embeddings, read_data, format_data
@@ -23,6 +25,11 @@ if __name__ == "__main__":
     parser.add_argument('-res_size', dest='res_size', required=False, default=100, help="Size of the echo state reservoirs.")
     parser.add_argument('-only_open_class', dest='only_open_class', required=False, default="True")
     parser.add_argument('-save_path', dest='save_path', required=True, help='Path to the pickled model files.')
+    parser.add_argument('-syn2gloss', dest='syn2gloss', required=False, default="None",
+                        help='Path to mapping between synsets and glosses')
+    parser.add_argument('-error_log', dest='error_log', required=False, default="None",
+                        help='Path to write the error report')
+
 
     args = parser.parse_args()
     embeddings_model = args.embeddings_model
@@ -43,6 +50,12 @@ if __name__ == "__main__":
         total_res_size = res_size
     only_open_class = args.only_open_class
     save_path = args.save_path
+    f_syn2gloss = args.syn2gloss
+    if f_syn2gloss != "None":
+        syn2gloss = pickle.load(open(f_syn2gloss, "rb"))
+    else:
+        syn2gloss = None
+    error_log = args.error_log
 
     embeddings = load_embeddings(embeddings_model)  # load the embeddings
     f_sensekey2synset = cPickle.load(open(sensekey2synset, "rb"))  # get the mapping between synset keys and IDs
@@ -112,18 +125,25 @@ if __name__ == "__main__":
     test_error = zeros((outSize,1))
     totalLen = 0
     correct, all = 0, 0
+    if syn2gloss is not None:
+        f_errors = open(os.path.join(error_log, "error_log.txt"), 'a')
+        f_errors.write("Lemma\tGold synset\tGold gloss\tSelected synset\tSelected gloss\tDistance\n")
     for text in states:
         outs = text[1]
         golds = text[2]
         lemmas = text[3]
         synsets = text[4]
         pos = text[5]
-        correct_text, all_text = calculate_accuracy(outs, synsets, lemmas, pos, embeddings, dictionary)
+        correct_text, all_text, errors = calculate_accuracy(outs, synsets, lemmas, pos, embeddings, dictionary, syn2gloss)
+        if syn2gloss is not None:
+            f_errors.write(errors)
         correct += correct_text
         all += all_text
         for i, out in enumerate(outs):
             test_error += square((reshape(golds[i], (outSize, 1)) - out))
         totalLen += len(outs)
+    if syn2gloss is not None:
+        f_errors.close()
     accuracy = (correct * 100.0) / all
     test_error = sqrt(test_error) / totalLen
     print "The mean square error: " + str(sum(test_error)[0] / outSize)

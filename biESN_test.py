@@ -84,7 +84,7 @@ if __name__ == "__main__":
     states = []
     for i, text in enumerate(test_data):
         inputs, fw_states, bw_states = [], [], []
-        Xts, Yts, lemmas, synsets, pos = format_data(test_data[i], embeddings, embeddings_size, window_size)
+        Xts, Yts, lemmas, synsets, pos, term_id = format_data(test_data[i], embeddings, embeddings_size, window_size)
         testLen = len(Xts)
         u_fw = zeros((inSize, 1))
         if use_reservoirs == "True":
@@ -120,21 +120,22 @@ if __name__ == "__main__":
             y = dot( Wout, state )
             X[j] = state
             Y[j] = y
-        states.append((X, Y, Yts, lemmas, synsets, pos))
+        states.append((X, Y, Yts, lemmas, synsets, pos, term_id))
 
     test_error = zeros((outSize,1))
     totalLen = 0
     correct, all = 0, 0
     if syn2gloss is not None:
         f_errors = open(os.path.join(error_log, "error_log.txt"), 'a')
-        f_errors.write("Lemma\tGold synset\tGold gloss\tSelected synset\tSelected gloss\tDistance\n")
+        f_errors.write("Term ID\tLemma\tGold synset\tGold gloss\tSelected synset\tSelected gloss\tDistance\n")
     for text in states:
         outs = text[1]
         golds = text[2]
         lemmas = text[3]
         synsets = text[4]
         pos = text[5]
-        correct_text, all_text, errors = calculate_accuracy(outs, synsets, lemmas, pos, embeddings, dictionary, syn2gloss)
+        term_id = text[6]
+        correct_text, all_text, errors = calculate_accuracy(outs, synsets, lemmas, pos, term_id, embeddings, dictionary, syn2gloss)
         if syn2gloss is not None:
             f_errors.write(errors)
         correct += correct_text

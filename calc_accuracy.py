@@ -13,7 +13,7 @@ def get_lemma2syn(f_dictionary):
         lemma2syn[lemma] = synsets
     return lemma2syn
 
-def calculate_accuracy(outs, gold_synsets, lemmas, pos_filters, embeddings, dictionary, syn2gloss):
+def calculate_accuracy(outs, gold_synsets, lemmas, pos_filters, term_ids, embeddings, dictionary, syn2gloss):
     lemma2syn = get_lemma2syn(dictionary)
     count_correct = 0
     count_all = 0
@@ -24,6 +24,7 @@ def calculate_accuracy(outs, gold_synsets, lemmas, pos_filters, embeddings, dict
         # if using the test data, use "test_lemmas", otherwise use "train_lemmas"
         lemma = lemmas[count]
         pos = pos_filters[count]
+        term_id = term_ids[count]
         if lemma in lemma2syn:
             possible_syns = lemma2syn[lemma]
         else:
@@ -57,7 +58,7 @@ def calculate_accuracy(outs, gold_synsets, lemmas, pos_filters, embeddings, dict
                     gold_glosses.append(syn2gloss[s])
                 gold_choice = "||".join(gold_ids)
                 gold_glosses = "||".join(gold_glosses)
-                error_log = lemma + "\t" + gold_choice + "\t" + gold_glosses + "\t" + selected_syn + "\t" + \
+                error_log = term_id + "\t" + lemma + "\t" + gold_choice + "\t" + gold_glosses + "\t" + selected_syn + "\t" + \
                             syn2gloss[selected_syn] + "\t" + str(max_sim) + "\n"
                 errors += error_log
         count_all += 1

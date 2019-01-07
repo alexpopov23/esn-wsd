@@ -44,6 +44,7 @@ def read_data(path, sensekey2synset, only_open_class="True"):
             current_sentence = []
             elements = sentence.findall(".//")
             for element in elements:
+                id = element.get("id")
                 pos = element.get("pos")
                 if only_open_class == "True" and pos not in ["NOUN", "VERB", "ADJ", "ADV"]:
                     continue
@@ -53,7 +54,7 @@ def read_data(path, sensekey2synset, only_open_class="True"):
                     synsets = [sensekey2synset[key] for key in codes2keys[element.get("id")]]
                 else:
                     synsets = None
-                current_sentence.append([wordform, lemma, pos, synsets])
+                current_sentence.append([wordform, lemma, pos, synsets, id])
             text_data.append(current_sentence)
         data.append(text_data)
     return data
@@ -65,6 +66,7 @@ def construct_contexts(sentences, window_size):
     lemmas = []
     synsets = []
     pos = []
+    term_id = []
     for sentence in sentences:
         sent_ctx = []
         sent_gold = []
@@ -88,9 +90,10 @@ def construct_contexts(sentences, window_size):
                 lemmas.append(word[1])
                 synsets.append(word[3])
                 pos.append(word[2])
+                term_id.append(word[4])
         contexts.append(sent_ctx)
         gold_data.append(sent_gold)
-    return contexts, gold_data, lemmas, synsets, pos
+    return contexts, gold_data, lemmas, synsets, pos, term_id
 
 def format_data(sentences, embeddings, EMBEDDINGS_SIZE, CONTEXT_WINDOW_SIZE):
     input_vectors = []
@@ -98,11 +101,13 @@ def format_data(sentences, embeddings, EMBEDDINGS_SIZE, CONTEXT_WINDOW_SIZE):
     lemmas = []
     synsets = []
     pos = []
+    term_id = []
     for sentence in sentences:
-        contexts, gold_labels, lemmas_sent, synsets_sent, pos_sent = construct_contexts([sentence], CONTEXT_WINDOW_SIZE)
+        contexts, gold_labels, lemmas_sent, synsets_sent, pos_sent, term_id_sent = construct_contexts([sentence], CONTEXT_WINDOW_SIZE)
         lemmas.extend(lemmas_sent)
         synsets.extend(synsets_sent)
         pos.extend(pos_sent)
+        term_id.extend(term_id_sent)
         zero = numpy.zeros(EMBEDDINGS_SIZE, dtype=numpy.float32)
         for i, sent_context in enumerate(contexts):
             for j, ctx in enumerate(sent_context):
@@ -123,7 +128,7 @@ def format_data(sentences, embeddings, EMBEDDINGS_SIZE, CONTEXT_WINDOW_SIZE):
                 gold_vector /= len(curr_gold_labes)
                 gold_vectors.append(gold_vector)
                 input_vectors.append(input_vector)
-    return input_vectors, gold_vectors, lemmas, synsets, pos
+    return input_vectors, gold_vectors, lemmas, synsets, pos, term_id
 
 
 

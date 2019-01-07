@@ -86,7 +86,7 @@ def construct_contexts(sentences, window_size):
                         else:
                             ctx.insert(0, "NULL")
                 sent_ctx.append(ctx)
-                sent_gold.append(word[-1])
+                sent_gold.append(word[3])
                 lemmas.append(word[1])
                 synsets.append(word[3])
                 pos.append(word[2])

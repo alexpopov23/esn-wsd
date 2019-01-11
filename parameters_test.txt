@@ -12,6 +12,8 @@
 5
 -use_reservoirs
 True
+-softmax
+True
 -bidirectional
 True
 -res_size
@@ -19,8 +21,8 @@ True
 -only_open_class
 True
 -save_path
-/home/lenovo/dev/ESN paper/save_path/test/trained_ESN3_100_0.5_1.0.cpickle
+/home/lenovo/dev/ESN paper/save_path/test
 -syn2gloss
 /home/lenovo/dev/ESN paper/syn2gloss.pkl
 -error_log
-/home/lenovo/dev/ESN paper/save_path/test/
+/home/lenovo/dev/ESN paper/save_path/test

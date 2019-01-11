@@ -6,6 +6,7 @@ import os
 from numpy import flip, random, linalg, zeros, tanh, dot, vstack, sqrt, eye, asarray, reshape, sum
 
 from preprocess_data import load_embeddings, read_data, format_data
+from loss_functions import delta_cross_entropy
 
 
 if __name__ == "__main__":
@@ -19,6 +20,8 @@ if __name__ == "__main__":
     parser.add_argument('-window_size', dest='window_size', required=True)
     parser.add_argument('-use_reservoirs', dest='use_reservoirs', required=False, default="True",
                         help="Use reseroirs or train directly on the word embeddings.")
+    parser.add_argument('-softmax', dest='softmax', required=False, default="False",
+                        help="Use a softmax classifier at the end of the network.")
     parser.add_argument('-bidirectional', dest='bidirectional', required=False, default="True",
                         help="Use a bidirectional architecture, or just one reservoir.")
     parser.add_argument('-res_size', dest='res_size', required=False, default=100,
@@ -48,6 +51,7 @@ if __name__ == "__main__":
     a = float(args.leak_rate)  # leaking rate
     res_sparsity = float(args.res_sparsity)
     only_open_class = args.only_open_class
+    softmax = args.softmax
     training_iterations = int(args.training_iterations)
     save_path = args.save_path
 
@@ -92,7 +96,7 @@ if __name__ == "__main__":
     for i,_ in enumerate(train_data):
         print 'calculating reservoir states on text ' + str(i+1) + '/' + str(len(train_data)) + '...'
         inputs, fw_states, bw_states = [], [], []
-        Xtr, Ytr,_, _, _ = format_data(train_data[i], embeddings, embeddings_size, window_size)
+        Xtr, Ytr,_, _, _, _ = format_data(train_data[i], embeddings, embeddings_size, window_size)
         trainLen = len(Xtr)
         u_fw = zeros((inSize, 1))
         if use_reservoirs == "True":
@@ -139,12 +143,17 @@ if __name__ == "__main__":
                 else:
                     state = u
                 y = dot(Wout, state)
-                phi = dot(state.T, SInverse)
-                k = phi.T / (RLS_lambda + dot(phi, state))
-                e = reshape(Ytr[t], (outSize, 1)) - y
-                curr_train_error[t] = sqrt(sum(dot(e, e.T))) / (len(e))
-                Wout += k.T * e
-                SInverse = (SInverse - dot(k, phi)) / RLS_lambda
+                if softmax == "True":
+                    grad = delta_cross_entropy(y, reshape(Ytr[t], (outSize, 1)))
+                    Wout -= grad
+                    pass
+                else:
+                    phi = dot(state.T, SInverse)
+                    k = phi.T / (RLS_lambda + dot(phi, state))
+                    e = reshape(Ytr[t], (outSize, 1)) - y
+                    curr_train_error[t] = sqrt(sum(dot(e, e.T))) / (len(e))
+                    Wout += k.T * e
+                    SInverse = (SInverse - dot(k, phi)) / RLS_lambda
             all_train_error.append(curr_train_error)
     print '...done.'
 

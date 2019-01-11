@@ -17,7 +17,7 @@ True
 -bidirectional
 True
 -res_size
-100
+200
 -only_open_class
 True
 -save_path

@@ -46,8 +46,8 @@ class SoftmaxModel():
         self.train_op = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
 
     def softmax(self):
-        # logits = tf.nn.relu(tf.matmul(self.reservoir_states, self.weights) + self.biases)
-        logits = tf.matmul(self.reservoir_states, self.weights) + self.biases
+        logits = tf.nn.relu(tf.matmul(self.reservoir_states, self.weights) + self.biases)
+        # logits = tf.matmul(self.reservoir_states, self.weights) + self.biases
         losses = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=self.labels)
         cost = tf.reduce_mean(losses)
         return cost, logits, losses

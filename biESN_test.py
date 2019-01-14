@@ -71,6 +71,7 @@ if __name__ == "__main__":
     input_size = embeddings_size * window_size
     output_size = embeddings_size
 
+    pickled_files = ""
     for f in os.listdir(save_path):
         if f.endswith(".cpickle"):
             pickled_files = f

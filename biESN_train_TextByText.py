@@ -26,7 +26,7 @@ if __name__ == "__main__":
                         help="Use reseroirs or train directly on the word embeddings.")
     parser.add_argument('-softmax', dest='softmax', required=False, default="False",
                         help="Use a softmax classifier at the end of the network.")
-    parser.add_argument('-learning_rate', dest='learning_rate', required=False, default=0.1,
+    parser.add_argument('-learning_rate', dest='learning_rate', required=False, default=1,
                         help="Learning rate in case the Tensorflow softmax implementation is used.")
     parser.add_argument('-bidirectional', dest='bidirectional', required=False, default="True",
                         help="Use a bidirectional architecture, or just one reservoir.")
